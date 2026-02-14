@@ -80,6 +80,13 @@ export default function Page() {
 
   const [form, setForm] = useState({ nama: "", pesan: "", harapan2026: "" });
 
+  // ✅ NEW: pesan yang sudah "dikirim" (agar hanya tampil di slide 4)
+  const [submittedMessage, setSubmittedMessage] = useState<{
+    nama: string;
+    pesan: string;
+    harapan2026: string;
+  } | null>(null);
+
   const next = () => {
     setDirection(1);
     setIndex((v) => clamp(v + 1, 0, SLIDES.length - 1));
@@ -140,8 +147,20 @@ export default function Page() {
               {slide === 1 && <Slide1 onNext={next} />}
               {slide === 2 && <Slide2 onNext={next} />}
               {slide === 3 && <Slide3 onNext={next} />}
-              {slide === 4 && <Slide4 form={form} setForm={setForm} onNext={next} />}
-              {slide === 5 && <Slide5 form={form} />}
+
+              {/* ✅ UPDATED: Slide 4 dengan submit pesan */}
+              {slide === 4 && (
+                <Slide4
+                  form={form}
+                  setForm={setForm}
+                  onNext={next}
+                  submittedMessage={submittedMessage}
+                  setSubmittedMessage={setSubmittedMessage}
+                />
+              )}
+
+              {/* ✅ UPDATED: Slide 5 dibuat lebih menarik & tidak menampilkan pesan */}
+              {slide === 5 && <Slide5 />}
             </motion.div>
           </AnimatePresence>
 
@@ -313,16 +332,30 @@ function Slide3({ onNext }: { onNext: () => void }) {
   );
 }
 
-/* ===== Slide 4 ===== */
+/* ===== Slide 4 (UPDATED: tombol kirim + pesan hanya tampil di slide 4) ===== */
 function Slide4({
   form,
   setForm,
   onNext,
+  submittedMessage,
+  setSubmittedMessage,
 }: {
   form: { nama: string; pesan: string; harapan2026: string };
   setForm: React.Dispatch<React.SetStateAction<{ nama: string; pesan: string; harapan2026: string }>>;
   onNext: () => void;
+  submittedMessage: { nama: string; pesan: string; harapan2026: string } | null;
+  setSubmittedMessage: React.Dispatch<
+    React.SetStateAction<{ nama: string; pesan: string; harapan2026: string } | null>
+  >;
 }) {
+  const handleSend = () => {
+    if (!form.nama.trim() || !form.pesan.trim() || !form.harapan2026.trim()) {
+      alert("Isi semua dulu yaa 😤");
+      return;
+    }
+    setSubmittedMessage({ ...form });
+  };
+
   return (
     <div className="grid md:grid-cols-2 gap-6 items-start">
       <div>
@@ -355,46 +388,80 @@ function Slide4({
           />
         </div>
 
+        {/* ✅ NEW: tombol kirim pesan */}
+        <button
+          onClick={handleSend}
+          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-pink-200/60 bg-pink-200/15 hover:bg-pink-200/25"
+        >
+          Kirim Pesan 💌
+        </button>
+
         <button
           onClick={onNext}
-          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+          className="mt-3 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
         >
           Surprises buat kamu🙈
         </button>
       </div>
 
+      {/* ✅ UPDATED: tampil pesan hanya setelah dikirim */}
       <div className="rounded-3xl border border-white/15 bg-white/10 p-4">
-        <div className="text-xs font-extrabold opacity-80">Preview</div>
-        <div className="mt-2 text-lg font-black">{form.nama ? `Hai, ${form.nama} ` : "Hai! "}</div>
-        <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">
-          {form.pesan || "Pesan buat juna ganteng ada disini..."}
-        </div>
-        <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
-          <span className="font-extrabold">Harapan 2026:</span> {form.harapan2026 || "(belum diisi)"}
-        </div>
+        <div className="text-xs font-extrabold opacity-80">Pesan Terkirim</div>
+
+        {submittedMessage ? (
+          <>
+            <div className="mt-2 text-lg font-black">{submittedMessage.nama ? `Hai, ${submittedMessage.nama} ` : "Hai! "}</div>
+            <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{submittedMessage.pesan}</div>
+            <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
+              <span className="font-extrabold">Harapan 2026:</span> {submittedMessage.harapan2026}
+            </div>
+            <div className="mt-3 text-xs opacity-75">(Pesan udah kekirim yaa ✅)</div>
+          </>
+        ) : (
+          <>
+            <div className="mt-2 text-lg font-black">{form.nama ? `Hai, ${form.nama} ` : "Hai! "}</div>
+            <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{form.pesan || "Pesan buat juna ganteng ada disini..."}</div>
+            <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
+              <span className="font-extrabold">Harapan 2026:</span> {form.harapan2026 || "(belum diisi)"}
+            </div>
+            <div className="mt-3 text-xs opacity-75">
+              Klik <span className="font-extrabold">Kirim Pesan 💌</span> biar pesannya “fix”.
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-/* ===== Slide 5 ===== */
-function Slide5({ form }: { form: { nama: string; pesan: string; harapan2026: string } }) {
+/* ===== Slide 5 (UPDATED: lebih menarik, tanpa pesan) ===== */
+function Slide5() {
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-4xl md:text-5xl font-black">Surprise JENONG!</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 14, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: EASE_OUT }}
+        className="text-center"
+      >
+        <h2 className="text-4xl md:text-5xl font-black">Surprise JENONG!</h2>
+        <p className="mt-2 opacity-90">Semangat yaa buat kedepannya💖</p>
 
-      <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
-        <div className="text-xs font-extrabold opacity-80">Pesan</div>
-        <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">
-          <span className="font-extrabold">{form.nama || "Anonim"}:</span> {form.pesan || "—"}
-        </div>
-      </div>
+        <motion.div
+          className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: EASE_INOUT }}
+        >
+          <span className="text-sm font-extrabold">Ready to go?</span>
+          <span className="text-lg">✈️</span>
+        </motion.div>
+      </motion.div>
 
       <div className="rounded-2xl border border-white/15 bg-black/25 overflow-hidden">
         <iframe src="/tiket/tiket.pdf" className="w-full h-130" title="tiket" />
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <a
           href="/tiket/tiket.pdf"
           target="_blank"
@@ -406,13 +473,13 @@ function Slide5({ form }: { form: { nama: string; pesan: string; harapan2026: st
         <a
           href="/tiket/tiket.pdf"
           download
-          className="rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+          className="rounded-full px-6 py-3 font-extrabold border border-pink-200/60 bg-pink-200/15 hover:bg-pink-200/25"
         >
-          Download PDF
+          Download PDF 🎁
         </a>
       </div>
 
-      <p className="text-xs opacity-80 mt-1">
+      <p className="text-xs opacity-80 mt-1 text-center">
         semangat yaaa by <span className="font-extrabold">Arjuna Satria</span>
       </p>
     </div>
@@ -421,11 +488,7 @@ function Slide5({ form }: { form: { nama: string; pesan: string; harapan2026: st
 
 /** ===== Background Float Rain ===== */
 function BgFloatRain({ slide }: { slide: Slide }) {
-  const sources = [
-    "/characters/sabil1-bg.png",
-    "/characters/sabil2-bg.png",
-    "/characters/sabil3-bg.png",
-  ];
+  const sources = ["/characters/sabil1-bg.png", "/characters/sabil2-bg.png", "/characters/sabil3-bg.png"];
 
   const count = slide === 2 ? 10 : slide === 4 ? 8 : 9;
 
