@@ -78,6 +78,19 @@ type MessagePayload = {
 
 const LS_KEY = "valentine_message_v1";
 
+// ✅ Supabase bisa "gagal init" saat build Vercel kalau ENV belum kebaca.
+//    Jadi kita amanin: kalau error import/create client, pakai null.
+//    (Kamu tetap import dari "@/lib/supabase", tapi di handleSend kita guard.)
+const safeSupabase = ((): typeof supabase | null => {
+  try {
+    // supabase dari lib sudah dibuat pakai env NEXT_PUBLIC_...
+    // kalau env kosong biasanya errornya muncul dari createClient.
+    return supabase;
+  } catch {
+    return null;
+  }
+})();
+
 export default function Page() {
   const [index, setIndex] = useState(0);
   const slide = SLIDES[clamp(index, 0, SLIDES.length - 1)];
@@ -137,10 +150,7 @@ export default function Page() {
           </div>
 
           <div className="flex-1 h-2 rounded-full border border-white/15 bg-white/10 overflow-hidden">
-            <div
-              className="h-full bg-linear-to-r from-pink-200 to-indigo-300"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-linear-to-r from-pink-200 to-indigo-300" style={{ width: `${progress}%` }} />
           </div>
 
           <button
@@ -155,14 +165,7 @@ export default function Page() {
         {/* Card */}
         <div className="mt-5 rounded-3xl border border-white/15 bg-black/35 backdrop-blur-xl p-5 shadow-[0_22px_90px_rgba(0,0,0,.45)]">
           <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={slide}
-              custom={direction}
-              variants={slideVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+            <motion.div key={slide} custom={direction} variants={slideVariants} initial="initial" animate="animate" exit="exit">
               {slide === 1 && <Slide1 onNext={next} />}
               {slide === 2 && <Slide2 onNext={next} />}
               {slide === 3 && <Slide3 onNext={next} />}
@@ -175,6 +178,7 @@ export default function Page() {
                   onNext={next}
                   submittedMessage={submittedMessage}
                   setSubmittedMessage={setSubmittedMessage}
+                  supabaseClient={safeSupabase}
                 />
               )}
 
@@ -218,9 +222,7 @@ export default function Page() {
 
           <div className="mt-3 text-center text-xs opacity-80 font-semibold">
             Salsabilla Athiyah:{" "}
-            <code className="px-2 py-0.5 rounded-full bg-black/25 border border-white/15">
-              Mantan Kandung
-            </code>
+            <code className="px-2 py-0.5 rounded-full bg-black/25 border border-white/15">Mantan Kandung</code>
           </div>
         </div>
 
@@ -242,9 +244,7 @@ function Slide1({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="text-center md:text-left">
-        <h1 className="text-4xl md:text-5xl font-black leading-tight">
-          Hai Salsabila Jenong (≧▽≦)
-        </h1>
+        <h1 className="text-4xl md:text-5xl font-black leading-tight">Hai Salsabila Jenong (≧▽≦)</h1>
         <p className="mt-2 text-base md:text-lg opacity-90">Klik tombol dibawah ini yaa</p>
         <button
           onClick={onNext}
@@ -270,9 +270,7 @@ function Slide2({ onNext }: { onNext: () => void }) {
 
         <h2 className="mt-3 text-4xl md:text-5xl font-black leading-tight">
           Happy Valentine{" "}
-          <span className="text-pink-200 drop-shadow-[0_0_18px_rgba(255,120,200,.45)]">
-            Mantan Kandung
-          </span>{" "}
+          <span className="text-pink-200 drop-shadow-[0_0_18px_rgba(255,120,200,.45)]">Mantan Kandung</span>{" "}
           💖
         </h2>
 
@@ -360,18 +358,26 @@ function Slide4({
   onNext,
   submittedMessage,
   setSubmittedMessage,
+  supabaseClient,
 }: {
   form: MessagePayload;
   setForm: React.Dispatch<React.SetStateAction<MessagePayload>>;
   onNext: () => void;
   submittedMessage: MessagePayload | null;
   setSubmittedMessage: React.Dispatch<React.SetStateAction<MessagePayload | null>>;
+  supabaseClient: typeof supabase | null;
 }) {
   const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
     if (!form.nama.trim() || !form.pesan.trim() || !form.harapan.trim()) {
       alert("Isi semua dulu yaa 😤");
+      return;
+    }
+
+    // ✅ Guard biar aman di Vercel kalau ENV belum kebaca / supabase gagal init
+    if (!supabaseClient) {
+      alert("Supabase belum siap. Pastikan ENV di Vercel sudah di-set lalu redeploy.");
       return;
     }
 
@@ -385,7 +391,7 @@ function Slide4({
     };
 
     // ✅ Insert to Supabase (table: valentine-message)
-    const { error } = await supabase.from("valentine-message").insert([payload]);
+    const { error } = await supabaseClient.from("valentine-message").insert([payload]);
 
     if (error) {
       console.error(error);
@@ -472,9 +478,7 @@ function Slide4({
 
         {submittedMessage ? (
           <>
-            <div className="mt-2 text-lg font-black">
-              {submittedMessage.nama ? `Hai, ${submittedMessage.nama} ` : "Hai! "}
-            </div>
+            <div className="mt-2 text-lg font-black">{submittedMessage.nama ? `Hai, ${submittedMessage.nama} ` : "Hai! "}</div>
             <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{submittedMessage.pesan}</div>
             <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
               <span className="font-extrabold">Harapan 2026:</span> {submittedMessage.harapan}
@@ -484,9 +488,7 @@ function Slide4({
         ) : (
           <>
             <div className="mt-2 text-lg font-black">{form.nama ? `Hai, ${form.nama} ` : "Hai! "}</div>
-            <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">
-              {form.pesan || "Pesan buat juna ganteng ada disini..."}
-            </div>
+            <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{form.pesan || "Pesan buat juna ganteng ada disini..."}</div>
             <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
               <span className="font-extrabold">Harapan 2026:</span> {form.harapan || "(belum diisi)"}
             </div>
