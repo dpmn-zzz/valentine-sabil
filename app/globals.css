@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* custom anim for png */
+@keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+@keyframes wiggle { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+@keyframes popin  { 0%{transform:scale(.85);opacity:0;filter:blur(10px)} 100%{transform:scale(1);opacity:1;filter:blur(0)} }
+@keyframes sparkle { 0%,100%{opacity:.35} 50%{opacity:1} }
+
+.floaty { animation: floaty 2.6s ease-in-out infinite; }
+.wiggle { animation: wiggle 1.6s ease-in-out infinite; }
+.popin  { animation: popin .35s ease-out both; }
+.sparkle{ animation: sparkle 1.4s ease-in-out infinite; }
