@@ -263,7 +263,7 @@ function Slide2({ onNext }: { onNext: () => void }) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-center text-center">
         <img
-          src="/public/characters/joget.git"
+          src="/characters/joget.git"
           alt="joget"
           className="w-35 h-auto rounded-2xl border border-white/15 bg-white/10 p-2"
         />
