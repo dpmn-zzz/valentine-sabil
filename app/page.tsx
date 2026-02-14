@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Slide = 1 | 2 | 3 | 4 | 5;
 const SLIDES: Slide[] = [1, 2, 3, 4, 5];
@@ -69,6 +70,14 @@ const slideVariants = {
   }),
 };
 
+type MessagePayload = {
+  nama: string;
+  pesan: string;
+  harapan2026: string;
+};
+
+const LS_KEY = "valentine_message_v1";
+
 export default function Page() {
   const [index, setIndex] = useState(0);
   const slide = SLIDES[clamp(index, 0, SLIDES.length - 1)];
@@ -78,14 +87,24 @@ export default function Page() {
   // track direction for slide animation
   const [direction, setDirection] = useState(1);
 
-  const [form, setForm] = useState({ nama: "", pesan: "", harapan2026: "" });
+  const [form, setForm] = useState<MessagePayload>({ nama: "", pesan: "", harapan2026: "" });
 
-  // ✅ NEW: pesan yang sudah "dikirim" (agar hanya tampil di slide 4)
-  const [submittedMessage, setSubmittedMessage] = useState<{
-    nama: string;
-    pesan: string;
-    harapan2026: string;
-  } | null>(null);
+  // ✅ pesan yang sudah "dikirim" (ditampilkan hanya di slide 4)
+  const [submittedMessage, setSubmittedMessage] = useState<MessagePayload | null>(null);
+
+  // ✅ Load last submitted message from localStorage on first mount (persist after refresh)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as MessagePayload;
+      if (parsed && typeof parsed === "object") {
+        setSubmittedMessage(parsed);
+      }
+    } catch {
+      localStorage.removeItem(LS_KEY);
+    }
+  }, []);
 
   const next = () => {
     setDirection(1);
@@ -118,10 +137,7 @@ export default function Page() {
           </div>
 
           <div className="flex-1 h-2 rounded-full border border-white/15 bg-white/10 overflow-hidden">
-            <div
-              className="h-full bg-linear-to-r from-pink-200 to-indigo-300"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-linear-to-r from-pink-200 to-indigo-300" style={{ width: `${progress}%` }} />
           </div>
 
           <button
@@ -136,19 +152,12 @@ export default function Page() {
         {/* Card */}
         <div className="mt-5 rounded-3xl border border-white/15 bg-black/35 backdrop-blur-xl p-5 shadow-[0_22px_90px_rgba(0,0,0,.45)]">
           <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={slide}
-              custom={direction}
-              variants={slideVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+            <motion.div key={slide} custom={direction} variants={slideVariants} initial="initial" animate="animate" exit="exit">
               {slide === 1 && <Slide1 onNext={next} />}
               {slide === 2 && <Slide2 onNext={next} />}
               {slide === 3 && <Slide3 onNext={next} />}
 
-              {/* ✅ UPDATED: Slide 4 dengan submit pesan */}
+              {/* ✅ Slide 4 dengan submit pesan + supabase + localStorage */}
               {slide === 4 && (
                 <Slide4
                   form={form}
@@ -159,7 +168,7 @@ export default function Page() {
                 />
               )}
 
-              {/* ✅ UPDATED: Slide 5 dibuat lebih menarik & tidak menampilkan pesan */}
+              {/* ✅ Slide 5 tanpa pesan */}
               {slide === 5 && <Slide5 />}
             </motion.div>
           </AnimatePresence>
@@ -199,9 +208,7 @@ export default function Page() {
 
           <div className="mt-3 text-center text-xs opacity-80 font-semibold">
             Salsabilla Athiyah:{" "}
-            <code className="px-2 py-0.5 rounded-full bg-black/25 border border-white/15">
-              Mantan Kandung
-            </code>
+            <code className="px-2 py-0.5 rounded-full bg-black/25 border border-white/15">Mantan Kandung</code>
           </div>
         </div>
 
@@ -225,10 +232,7 @@ function Slide1({ onNext }: { onNext: () => void }) {
       <div className="text-center md:text-left">
         <h1 className="text-4xl md:text-5xl font-black leading-tight">Hai Salsabila Jenong (≧▽≦)</h1>
         <p className="mt-2 text-base md:text-lg opacity-90">Klik tombol dibawah ini yaa</p>
-        <button
-          onClick={onNext}
-          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
-        >
+        <button onClick={onNext} className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15">
           Klik ✨
         </button>
       </div>
@@ -249,18 +253,12 @@ function Slide2({ onNext }: { onNext: () => void }) {
 
         <h2 className="mt-3 text-4xl md:text-5xl font-black leading-tight">
           Happy Valentine{" "}
-          <span className="text-pink-200 drop-shadow-[0_0_18px_rgba(255,120,200,.45)]">
-            Mantan Kandung
-          </span>{" "}
-          💖
+          <span className="text-pink-200 drop-shadow-[0_0_18px_rgba(255,120,200,.45)]">Mantan Kandung</span> 💖
         </h2>
 
         <p className="mt-2 opacity-90">Semoga sukses dan bahagia terus ya, hehe 🌿</p>
 
-        <button
-          onClick={onNext}
-          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
-        >
+        <button onClick={onNext} className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15">
           Klik lanjut dong!
         </button>
       </div>
@@ -283,10 +281,7 @@ function SmoothCard({ src, alt, delay }: { src: string; alt: string; delay: numb
       transition={{ duration: 0.65, ease: EASE_OUT, delay }}
       whileHover={{ y: -6 }}
     >
-      <motion.div
-        animate={{ y: [0, -5, 0], rotate: [0, 0.6, 0] }}
-        transition={{ duration: 3.6, repeat: Infinity, ease: EASE_INOUT }}
-      >
+      <motion.div animate={{ y: [0, -5, 0], rotate: [0, 0.6, 0] }} transition={{ duration: 3.6, repeat: Infinity, ease: EASE_INOUT }}>
         <img src={src} alt={alt} className="w-55 h-auto rounded-2xl" />
       </motion.div>
     </motion.div>
@@ -321,10 +316,7 @@ function Slide3({ onNext }: { onNext: () => void }) {
         <h2 className="text-4xl md:text-5xl font-black">Eh jadi ga nih ke solo?</h2>
         <p className="mt-2 opacity-90">yaa, kalo jadi coba dong klik tombol di bawah ini😳</p>
 
-        <button
-          onClick={onNext}
-          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
-        >
+        <button onClick={onNext} className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15">
           Gas ga sh?
         </button>
       </motion.div>
@@ -332,7 +324,7 @@ function Slide3({ onNext }: { onNext: () => void }) {
   );
 }
 
-/* ===== Slide 4 (UPDATED: tombol kirim + pesan hanya tampil di slide 4) ===== */
+/* ===== Slide 4 (Supabase + Persist) ===== */
 function Slide4({
   form,
   setForm,
@@ -340,20 +332,51 @@ function Slide4({
   submittedMessage,
   setSubmittedMessage,
 }: {
-  form: { nama: string; pesan: string; harapan2026: string };
-  setForm: React.Dispatch<React.SetStateAction<{ nama: string; pesan: string; harapan2026: string }>>;
+  form: MessagePayload;
+  setForm: React.Dispatch<React.SetStateAction<MessagePayload>>;
   onNext: () => void;
-  submittedMessage: { nama: string; pesan: string; harapan2026: string } | null;
-  setSubmittedMessage: React.Dispatch<
-    React.SetStateAction<{ nama: string; pesan: string; harapan2026: string } | null>
-  >;
+  submittedMessage: MessagePayload | null;
+  setSubmittedMessage: React.Dispatch<React.SetStateAction<MessagePayload | null>>;
 }) {
-  const handleSend = () => {
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
     if (!form.nama.trim() || !form.pesan.trim() || !form.harapan2026.trim()) {
       alert("Isi semua dulu yaa 😤");
       return;
     }
-    setSubmittedMessage({ ...form });
+
+    setSending(true);
+
+    const payload: MessagePayload = {
+      nama: form.nama,
+      pesan: form.pesan,
+      harapan2026: form.harapan2026,
+    };
+
+    // ✅ Insert to Supabase (table: messages)
+    const { error } = await supabase.from("messages").insert([payload]);
+
+    if (error) {
+      console.error(error);
+      alert("Gagal kirim ke Supabase: " + error.message);
+      setSending(false);
+      return;
+    }
+
+    // ✅ Update local state + localStorage (persist after refresh)
+    setSubmittedMessage(payload);
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    } catch {}
+
+    alert("Pesan berhasil dikirim ✅");
+    setSending(false);
+  };
+
+  const clearLocal = () => {
+    setSubmittedMessage(null);
+    localStorage.removeItem(LS_KEY);
   };
 
   return (
@@ -388,34 +411,45 @@ function Slide4({
           />
         </div>
 
-        {/* ✅ NEW: tombol kirim pesan */}
+        {/* ✅ tombol kirim pesan */}
         <button
           onClick={handleSend}
-          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-pink-200/60 bg-pink-200/15 hover:bg-pink-200/25"
+          disabled={sending}
+          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-pink-200/60 bg-pink-200/15 hover:bg-pink-200/25 disabled:opacity-50"
         >
-          Kirim Pesan 💌
+          {sending ? "Mengirim..." : "Kirim Pesan 💌"}
+        </button>
+
+        {/* optional: clear local saved message */}
+        <button
+          onClick={clearLocal}
+          className="mt-3 ml-2 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+        >
+          Reset Pesan
         </button>
 
         <button
           onClick={onNext}
-          className="mt-3 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+          className="mt-3 block rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
         >
           Surprises buat kamu🙈
         </button>
       </div>
 
-      {/* ✅ UPDATED: tampil pesan hanya setelah dikirim */}
+      {/* tampil pesan hanya setelah dikirim */}
       <div className="rounded-3xl border border-white/15 bg-white/10 p-4">
         <div className="text-xs font-extrabold opacity-80">Pesan Terkirim</div>
 
         {submittedMessage ? (
           <>
-            <div className="mt-2 text-lg font-black">{submittedMessage.nama ? `Hai, ${submittedMessage.nama} ` : "Hai! "}</div>
+            <div className="mt-2 text-lg font-black">
+              {submittedMessage.nama ? `Hai, ${submittedMessage.nama} ` : "Hai! "}
+            </div>
             <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{submittedMessage.pesan}</div>
             <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
               <span className="font-extrabold">Harapan 2026:</span> {submittedMessage.harapan2026}
             </div>
-            <div className="mt-3 text-xs opacity-75">(Pesan udah kekirim yaa ✅)</div>
+            <div className="mt-3 text-xs opacity-75">(Pesan udah kekirim & tersimpan ✅)</div>
           </>
         ) : (
           <>
@@ -425,7 +459,7 @@ function Slide4({
               <span className="font-extrabold">Harapan 2026:</span> {form.harapan2026 || "(belum diisi)"}
             </div>
             <div className="mt-3 text-xs opacity-75">
-              Klik <span className="font-extrabold">Kirim Pesan 💌</span> biar pesannya “fix”.
+              Klik <span className="font-extrabold">Kirim Pesan 💌</span> biar pesannya “fix” dan ke-save.
             </div>
           </>
         )}
@@ -434,7 +468,7 @@ function Slide4({
   );
 }
 
-/* ===== Slide 5 (UPDATED: lebih menarik, tanpa pesan) ===== */
+/* ===== Slide 5 (lebih menarik, tanpa pesan) ===== */
 function Slide5() {
   return (
     <div className="flex flex-col gap-4">
