@@ -240,7 +240,7 @@ function Slide1({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex flex-col md:flex-row items-center gap-6">
       <div className="rounded-3xl border border-white/15 bg-white/10 p-2">
-        <img src="/characters/Hay.gif" alt="Hay" className="w-70 h-auto rounded-2xl" />
+        <img src="/characters/hay.gif" alt="hay" className="w-70 h-auto rounded-2xl" />
       </div>
 
       <div className="text-center md:text-left">
