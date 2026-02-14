@@ -73,7 +73,7 @@ const slideVariants = {
 type MessagePayload = {
   nama: string;
   pesan: string;
-  harapan2026: string;
+  harapan: string; // ✅ sesuai kolom supabase: harapan
 };
 
 const LS_KEY = "valentine_message_v1";
@@ -87,7 +87,7 @@ export default function Page() {
   // track direction for slide animation
   const [direction, setDirection] = useState(1);
 
-  const [form, setForm] = useState<MessagePayload>({ nama: "", pesan: "", harapan2026: "" });
+  const [form, setForm] = useState<MessagePayload>({ nama: "", pesan: "", harapan: "" });
 
   // ✅ pesan yang sudah "dikirim" (ditampilkan hanya di slide 4)
   const [submittedMessage, setSubmittedMessage] = useState<MessagePayload | null>(null);
@@ -137,7 +137,10 @@ export default function Page() {
           </div>
 
           <div className="flex-1 h-2 rounded-full border border-white/15 bg-white/10 overflow-hidden">
-            <div className="h-full bg-linear-to-r from-pink-200 to-indigo-300" style={{ width: `${progress}%` }} />
+            <div
+              className="h-full bg-linear-to-r from-pink-200 to-indigo-300"
+              style={{ width: `${progress}%` }}
+            />
           </div>
 
           <button
@@ -152,7 +155,14 @@ export default function Page() {
         {/* Card */}
         <div className="mt-5 rounded-3xl border border-white/15 bg-black/35 backdrop-blur-xl p-5 shadow-[0_22px_90px_rgba(0,0,0,.45)]">
           <AnimatePresence mode="wait" custom={direction}>
-            <motion.div key={slide} custom={direction} variants={slideVariants} initial="initial" animate="animate" exit="exit">
+            <motion.div
+              key={slide}
+              custom={direction}
+              variants={slideVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
               {slide === 1 && <Slide1 onNext={next} />}
               {slide === 2 && <Slide2 onNext={next} />}
               {slide === 3 && <Slide3 onNext={next} />}
@@ -208,7 +218,9 @@ export default function Page() {
 
           <div className="mt-3 text-center text-xs opacity-80 font-semibold">
             Salsabilla Athiyah:{" "}
-            <code className="px-2 py-0.5 rounded-full bg-black/25 border border-white/15">Mantan Kandung</code>
+            <code className="px-2 py-0.5 rounded-full bg-black/25 border border-white/15">
+              Mantan Kandung
+            </code>
           </div>
         </div>
 
@@ -230,9 +242,14 @@ function Slide1({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="text-center md:text-left">
-        <h1 className="text-4xl md:text-5xl font-black leading-tight">Hai Salsabila Jenong (≧▽≦)</h1>
+        <h1 className="text-4xl md:text-5xl font-black leading-tight">
+          Hai Salsabila Jenong (≧▽≦)
+        </h1>
         <p className="mt-2 text-base md:text-lg opacity-90">Klik tombol dibawah ini yaa</p>
-        <button onClick={onNext} className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15">
+        <button
+          onClick={onNext}
+          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+        >
           Klik ✨
         </button>
       </div>
@@ -253,12 +270,18 @@ function Slide2({ onNext }: { onNext: () => void }) {
 
         <h2 className="mt-3 text-4xl md:text-5xl font-black leading-tight">
           Happy Valentine{" "}
-          <span className="text-pink-200 drop-shadow-[0_0_18px_rgba(255,120,200,.45)]">Mantan Kandung</span> 💖
+          <span className="text-pink-200 drop-shadow-[0_0_18px_rgba(255,120,200,.45)]">
+            Mantan Kandung
+          </span>{" "}
+          💖
         </h2>
 
         <p className="mt-2 opacity-90">Semoga sukses dan bahagia terus ya, hehe 🌿</p>
 
-        <button onClick={onNext} className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15">
+        <button
+          onClick={onNext}
+          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+        >
           Klik lanjut dong!
         </button>
       </div>
@@ -281,7 +304,10 @@ function SmoothCard({ src, alt, delay }: { src: string; alt: string; delay: numb
       transition={{ duration: 0.65, ease: EASE_OUT, delay }}
       whileHover={{ y: -6 }}
     >
-      <motion.div animate={{ y: [0, -5, 0], rotate: [0, 0.6, 0] }} transition={{ duration: 3.6, repeat: Infinity, ease: EASE_INOUT }}>
+      <motion.div
+        animate={{ y: [0, -5, 0], rotate: [0, 0.6, 0] }}
+        transition={{ duration: 3.6, repeat: Infinity, ease: EASE_INOUT }}
+      >
         <img src={src} alt={alt} className="w-55 h-auto rounded-2xl" />
       </motion.div>
     </motion.div>
@@ -316,7 +342,10 @@ function Slide3({ onNext }: { onNext: () => void }) {
         <h2 className="text-4xl md:text-5xl font-black">Eh jadi ga nih ke solo?</h2>
         <p className="mt-2 opacity-90">yaa, kalo jadi coba dong klik tombol di bawah ini😳</p>
 
-        <button onClick={onNext} className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15">
+        <button
+          onClick={onNext}
+          className="mt-4 rounded-full px-6 py-3 font-extrabold border border-white/15 bg-white/10 hover:bg-white/15"
+        >
           Gas ga sh?
         </button>
       </motion.div>
@@ -341,20 +370,21 @@ function Slide4({
   const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
-    if (!form.nama.trim() || !form.pesan.trim() || !form.harapan2026.trim()) {
+    if (!form.nama.trim() || !form.pesan.trim() || !form.harapan.trim()) {
       alert("Isi semua dulu yaa 😤");
       return;
     }
 
     setSending(true);
 
+    // ✅ payload sesuai table supabase: valentine-message (kolom: nama, pesan, harapan)
     const payload: MessagePayload = {
       nama: form.nama,
       pesan: form.pesan,
-      harapan: form.harapan2026,
+      harapan: form.harapan,
     };
 
-    // ✅ Insert to Supabase (table: messages)
+    // ✅ Insert to Supabase (table: valentine-message)
     const { error } = await supabase.from("valentine-message").insert([payload]);
 
     if (error) {
@@ -404,8 +434,8 @@ function Slide4({
 
           <label className="text-sm font-extrabold opacity-90">Harapan 2026</label>
           <textarea
-            value={form.harapan2026}
-            onChange={(e) => setForm((s) => ({ ...s, harapan2026: e.target.value }))}
+            value={form.harapan}
+            onChange={(e) => setForm((s) => ({ ...s, harapan: e.target.value }))}
             className="w-full min-h-24 rounded-2xl border border-white/15 bg-black/25 px-4 py-3 outline-none focus:border-pink-200/60"
             placeholder="'Semoga 2026 juna makin di lancarkan rezekinya..'"
           />
@@ -447,16 +477,18 @@ function Slide4({
             </div>
             <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{submittedMessage.pesan}</div>
             <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
-              <span className="font-extrabold">Harapan 2026:</span> {submittedMessage.harapan2026}
+              <span className="font-extrabold">Harapan 2026:</span> {submittedMessage.harapan}
             </div>
             <div className="mt-3 text-xs opacity-75">(Pesan udah kekirim & tersimpan ✅)</div>
           </>
         ) : (
           <>
             <div className="mt-2 text-lg font-black">{form.nama ? `Hai, ${form.nama} ` : "Hai! "}</div>
-            <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">{form.pesan || "Pesan buat juna ganteng ada disini..."}</div>
+            <div className="mt-2 text-sm opacity-90 whitespace-pre-wrap">
+              {form.pesan || "Pesan buat juna ganteng ada disini..."}
+            </div>
             <div className="mt-3 text-sm opacity-90 whitespace-pre-wrap">
-              <span className="font-extrabold">Harapan 2026:</span> {form.harapan2026 || "(belum diisi)"}
+              <span className="font-extrabold">Harapan 2026:</span> {form.harapan || "(belum diisi)"}
             </div>
             <div className="mt-3 text-xs opacity-75">
               Klik <span className="font-extrabold">Kirim Pesan 💌</span> biar pesannya “fix” dan ke-save.
