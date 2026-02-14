@@ -355,7 +355,7 @@ function Slide4({
     };
 
     // ✅ Insert to Supabase (table: messages)
-    const { error } = await supabase.from("messages").insert([payload]);
+    const { error } = await supabase.from("valentine-message").insert([payload]);
 
     if (error) {
       console.error(error);
